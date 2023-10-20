@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Transformation Matrices</title>
+
+<script>
+    /*
+     * Name:  Wantong Wu
+     * Partner name (if pair programming):
+     * Reflections on this assignment: 
+     * 3 different shapes moving at the same time: 
+     *  - background
+     *  - sign
+     *  - sun
+     * 3 different transformation types: 
+     *  - background: translate
+     *  - sign: scale & translate
+     *  - sun: rotate
+     * 3 transitions from one motion to another:
+     *  - background: move -> stop -> move the opposite way
+     *  - sign: move -> stop -> move -> reset position -> move
+     *  - sun: rotate -> stop -> rotate the opposite way -> stop
+     */
+    
+    var canvas;    // DOM object corresponding to the canvas
+    var graphics;  // 2D graphics context for drawing on the canvas
+
+    // this GLOBAL variable is responsible for maintaining the current
+    // set of transformations (3x3)
+    var currMatrix;
+
+    function identityMatrix() {
+      return [[1,0,0],[0,1,0],[0,0,1]];
+    }
+
+    function scaleMatrix(sx, sy) {
+      return [[sx,0,0],[0,sy,0],[0,0,1]];
+    }
+
+    function rotateMatrix(theta) {
+      return [[Math.cos(theta),-Math.sin(theta),0],
+              [Math.sin(theta),Math.cos(theta),0],
+              [0,0,1]];
+    }
+
+    function translateMatrix(tx, ty) {
+      return [[1,0,tx],[0,1,ty],[0,0,1]];
+    }
+
+    function reflectionMatrix() {
+      return [[-1,0,0],[0,1,0],[0,0,1]];
+    }
+
+    function shearMatrix(lambda) {
+      return [[1,0,0],[lambda,1,0],[0,0,1]];
+    }
+
+    function matrixMultiply(M1, M2) {
+      var newM = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+      for (var i = 0; i < M1.length; i++) {
+        for (var j = 0; j < M2[0].length; j++) {
+          for (var k = 0; k < M1[0].length; k++) {
+            newM[i][j] += M1[i][k] * M2[k][j];
+          }
+        }
+      }
+      return newM;
+    }
+
+    // this function multiplies the current matrix by another transformation,
+    // then updates the current matrix to the result
+    function pushMatrix(currMatrix, newMatrix) {
+        currMatrix = matrixMultiply(currMatrix, newMatrix); // order very important!
+        //printMatrix(currMatrix);
+
+        // note that the setTransform method clear the current matrix and then
+        // sets it to be this new one (it does not build up the transformations!)
+        graphics.setTransform(currMatrix[0][0],currMatrix[1][0],
+                              currMatrix[0][1],currMatrix[1][1],
+                              currMatrix[0][2],currMatrix[1][2]);
+
+        return currMatrix;
+    }
+
+    function printMatrix(M){
+      console.log('(', M[0][0],M[0][1],M[0][2],')',
+                  '(', M[1][0],M[1][1],M[1][2],')',
+                  '(', M[2][0],M[2][1],M[2][2],')');
+    }
+    
+
+    var bgT = identityMatrix();
+    var counter = 0;
+
+    function drawBackground() {
+      graphics.save();
+
+      if (counter % 250 <= 50) {
+        bgT = pushMatrix(bgT, translateMatrix(0,0));
+      } else if (counter % 250 <= 100) {
+        bgT = pushMatrix(bgT, translateMatrix(0,-5));
+      } else if (counter % 250 <= 150) {
+        bgT = pushMatrix(bgT, translateMatrix(0,0));
+      } else if (counter % 250 <= 200){
+        bgT = pushMatrix(bgT, translateMatrix(0,5));
+      }
+      //printMatrix(bgT);
+      console.log(counter);
+
+      graphics.fillStyle = "#c2f1ff";
+      graphics.fillRect(0,0,canvas.width,100);
+      graphics.fillStyle = "#c4d986";
+      graphics.fillRect(0,80,canvas.width,100);
+      graphics.fillStyle = "#d9bf7a";
+      graphics.fillRect(0,120,canvas.width,100);
+      graphics.fillStyle = "#daaa6a";
+      graphics.fillRect(0,140,canvas.width,100);
+      graphics.fillStyle = "#a06b9c";
+      graphics.fillRect(0,160,canvas.width,100);
+      graphics.fillStyle = "#633e61";
+      graphics.fillRect(0,190,canvas.width,100);
+      graphics.fillStyle = "#091e3f";
+      graphics.fillRect(0,230,canvas.width,600);
+
+      graphics.restore();
+    }
+
+    function drawLand() {
+      if (counter % 250 <= 50) {
+        sketchLand("#b09050", "#4f5023");
+      } else if (counter % 250 <= 110){
+        sketchLand("#663f21", "#1d1c08");
+      } else if (counter % 250 <= 160){
+        sketchLand("black", "white");
+      } else if (counter % 250 <= 200) {
+        sketchLand("#663f21", "#1d1c08");
+      } else {
+        sketchLand("#b09050", "#4f5023");
+      }
+    }
+
+    function sketchLand(colorLand, colorRoad) {
+      graphics.fillStyle = colorLand;
+      graphics.beginPath();
+      graphics.moveTo(0, 150);
+      graphics.lineTo(500, 100);
+      graphics.lineTo(500, 300);
+      graphics.lineTo(0, 300);
+      graphics.closePath();
+      graphics.fill();
+
+      graphics.fillStyle = colorRoad;
+      graphics.beginPath();
+      graphics.moveTo(50, 300);
+      graphics.lineTo(500, 90);
+      graphics.lineTo(500, 120);
+      graphics.lineTo(270, 300);
+      graphics.closePath();
+      graphics.fill();
+    }
+
+    var signT = identityMatrix();
+
+    function drawSign() {
+      graphics.save();
+
+      if (counter % 90 <= 20) {
+        signT = pushMatrix(signT, scaleMatrix(.95,.95));
+        signT = pushMatrix(signT, translateMatrix(25,5));
+      } else if (counter % 90 <= 30) {
+        signT = pushMatrix(signT, scaleMatrix(1,1));
+      } else if (counter % 90 < 89) {
+        signT = pushMatrix(signT, scaleMatrix(.95,.95));
+        signT = pushMatrix(signT, translateMatrix(25,5));
+      } else {
+        signT = identityMatrix();
+        for (var i = 0; i < 6; i++) {
+          signT = pushMatrix(signT, translateMatrix(-25,-5));
+          signT = pushMatrix(signT, scaleMatrix(1/.95,1/.95));
+        }
+      }
+
+      var xCenter = 100;
+      var yCenter = 100;
+      var size = 50;
+      var bSize = 40;
+      var signColor, strokeColor, standColor;
+
+      if (counter % 250 <= 110 || counter % 250 > 160) {
+        signColor = "#f4e4a2";
+        strokeColor = "#b49c62";
+        standColor = "#d7ba76";
+      } else if (counter % 250 <= 160) {
+        signColor = "cyan"//#45caae";
+        strokeColor = "#3bffb7";
+        standColor = "#5eac90";
+      } 
+
+      graphics.fillStyle = standColor;
+      graphics.fillRect(xCenter-10,yCenter,20,150);
+
+      graphics.fillStyle = signColor;
+      graphics.strokeStyle = strokeColor;
+      graphics.beginPath();
+      graphics.moveTo(xCenter, yCenter-size);
+      graphics.lineTo(xCenter+size, yCenter);
+      graphics.lineTo(xCenter, yCenter+size);
+      graphics.lineTo(xCenter-size, yCenter);
+      graphics.closePath();
+      graphics.stroke();
+      graphics.fill();
+
+      graphics.fillStyle = "black";
+      graphics.strokeStyle = "black";
+      graphics.beginPath();
+      graphics.moveTo(xCenter, yCenter-bSize);
+      graphics.lineTo(xCenter+bSize, yCenter);
+      graphics.lineTo(xCenter, yCenter+bSize);
+      graphics.lineTo(xCenter-bSize, yCenter);
+      graphics.closePath();
+      graphics.stroke();
+
+      graphics.beginPath();
+      graphics.moveTo(xCenter, yCenter-30);
+      graphics.lineTo(xCenter+17, yCenter-10);
+      graphics.lineTo(xCenter+5, yCenter-10);
+      graphics.lineTo(xCenter+5, yCenter+25);
+      graphics.lineTo(xCenter-5, yCenter+25);
+      graphics.lineTo(xCenter-5, yCenter-10);
+      graphics.lineTo(xCenter-17, yCenter-10);
+      graphics.closePath();
+      graphics.fill();
+
+      graphics.restore();
+    }
+
+    var sunT = translateMatrix(225,100);
+    var theta = 0.05;
+    sunT = matrixMultiply(sunT, rotateMatrix(Math.PI*3/4));
+
+    function drawSun() {
+        graphics.save();
+        
+        if (counter % 250 <= 50) {
+          sunT = pushMatrix(sunT, rotateMatrix(0));
+        } else if (counter % 250 <= 110){
+          sunT = pushMatrix(sunT, rotateMatrix(theta));
+        } else if (counter % 250 <= 160){
+          sunT = pushMatrix(sunT, rotateMatrix(0));
+        } else if (counter % 250 <= 220) {
+          sunT = pushMatrix(sunT, rotateMatrix(-theta));
+        } else {
+          sunT = pushMatrix(sunT, rotateMatrix(0));
+        }
+
+        graphics.fillStyle = "white";
+        if (counter % 250 <= 90 || counter % 250 >= 180) {
+          graphics.strokeStyle = "orange";
+        } else {
+          graphics.strokeStyle = "#4ab4de";
+        }
+        graphics.lineWidth = 5;
+        graphics.beginPath();
+        graphics.arc(130, 110, 20, 0, 2 * Math.PI);
+        graphics.stroke();
+        graphics.fill();
+
+        graphics.restore();
+    }
+
+    function draw() {
+        //graphics.clearRect(0, 0, canvas.width, canvas.height);
+        counter++;
+        drawBackground();
+        drawSun();
+        drawLand();
+        drawSign();
+
+    }
+
+    function init() {
+        canvas = document.getElementById("theCanvas");
+        graphics = canvas.getContext("2d");
+      
+        setInterval(draw,40); // draw something on the canvas
+    }
+</script>
+
+
+</head>
+<body onload="init()">
+    <canvas id="theCanvas" width="450" height="300"></canvas>
+</body>
+</html>
