@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Rainbow Star</title>
+
+
+  <script>
+    /*
+     * Name:  Wantong Wu
+     * Partner name (if pair programming): N/A
+     * Reflections on this assignment: The hardest part is
+     * To figure out how to draw lines with different slopes and how to
+     * combine difference cases (by switching x1, y1 and x2, y2). Once
+     * these were resolved, the drawing part is super fun.
+     * 
+     */
+
+    var canvas;    // DOM object corresponding to the canvas
+    var graphics;  // 2D graphics context for drawing on the canvas
+
+    // think about what arguments this function will need?
+    /* Draw a line from (x1,y1) to (x2, y2)
+     * x1, y1: Coordinate for the start point of the line
+     * x2, y2: Coordinate for the end point of the line
+     */
+    function drawLine(x1, y1, x2, y2) {
+      var slope = (y2 - y1) / (x2 - x1);
+      //console.log("slope:", slope);
+
+      // Switch points based on cases
+      if ((x1 > x2 && slope <= 1 && slope >= -1) || 
+          (y1 < y2 && (slope < -1 || slope > 1))) {
+        var temp = x2;
+        x2 = x1;
+        x1 = temp;
+        temp = y2;
+        y2 = y1;
+        y1 = temp;
+      }
+      //console.log("x1, y1: ", x1, y1);
+      //console.log("x2, y2: ", x2, y2);
+      
+      var x, y, d;
+      var deltaX = x2 - x1;
+      var deltaY = y1 - y2;
+      //console.log("deltaX:", deltaX);
+      //console.log("deltaY:", deltaY);
+
+      // Incremental Midpoint Algorithm
+      if (slope <= 1 && slope >= 0) {
+        y = y1;
+        d = deltaY * (x1 + 1.5) + deltaX * (y1 + 1) + x1 * y2 - x2 * y1;
+        //console.log("d:", d);
+        
+        for (x = x1; x <= x2; x++) {
+          graphics.fillRect(x, y, 1, 1);
+          if (d < 0) {
+            y++;
+            d += deltaX + deltaY;
+          } else {
+            d += deltaY;
+          }
+        }
+        
+      } else if (slope <= 0 && slope >= -1) {
+        y = y1;
+        d = deltaY * (x1 + 1.5) + deltaX * (y1 - 1) + x1 * y2 - x2 * y1;
+        //console.log("d:", d);
+        
+        for (x = x1; x <= x2; x++) {
+          graphics.fillRect(x, y, 1, 1);
+          if (d > 0) {
+            y--;
+            d += deltaY - deltaX;
+          } else {
+            d += deltaY;
+          }
+        }
+        
+      } else if (slope < -1) {
+        x = x1;
+        d = deltaY * (x1 + 1) + deltaX * (y1 - 1.5) + x1 * y2 - x2 * y1; 
+        //console.log("d:", d);
+        for (y = y1; y >= y2; y--) {
+          graphics.fillRect(x, y, 1, 1);
+          //console.log("d in loop:", d);
+          if (d < 0) {
+            x++;
+            d += - deltaX + deltaY;
+          } else {
+            d += - deltaX;
+          }
+        }
+        
+      } else if (slope > 1) {
+        x = x1;
+        d = deltaY * (x1 - 1) + deltaX * (y1 - 1.5) + x1 * y2 - x2 * y1; 
+        //console.log("d:", d);
+        for (y = y1; y >= y2; y--) {
+          graphics.fillRect(x, y, 1, 1);
+          //console.log("d in loop:", d);
+          if (d > 0) {
+            x--;
+            d += - deltaX - deltaY;
+          } else {
+            d += - deltaX;
+          }
+        }
+      }
+      
+    }
+
+    /* Draw a rectangle with 2 corners (x1,y1) and (x2, y2) using drawLine function
+     * Doesn't include all cases with different input. Only serve for this assignment.
+     * x1, y1: Coordinate for the upper left corner
+     * x2, y2: Coordinate for the bottom right corner
+     * color : Color of the rectangle
+     */
+    function drawRect(x1, y1, x2, y2, color) {
+      graphics.fillStyle = color;
+      for (var x = x1; x <= x2; x ++) {
+        drawLine(x, y1, x, y2);
+      }
+    }
+    
+    /* Draw a very simple star centered at (100, 100).
+     * Test every slops and directions.
+     * Coordinates hard coded.
+     */
+    function testStar() {
+      drawLine(100, 100, 50, 10); 
+      drawLine(100, 100, 50, 80);
+      drawLine(100, 100, 150, 50);
+      drawLine(100, 100, 150, 80);
+      drawLine(100, 100, 150, 110);
+      drawLine(100, 100, 150, 170);
+      drawLine(100, 100, 50, 120);
+      drawLine(100, 100, 50, 170);
+      
+      drawLine(100, 100, 100, 200);
+      drawLine(100, 100, 100, 20);
+      drawLine(100, 100, 20, 100);
+      drawLine(100, 100, 200, 100);
+    }
+
+    /* Draw a small star with a specified color
+     * x, y: Coordinate of the star
+     * color: Color of the star
+     */
+    function drawStar(x, y, color) {
+      var rad = 3;
+      
+      graphics.fillStyle = color;
+
+      drawLine(x-rad, y, x+rad, y);
+      drawLine(x, y-rad, x, y+rad);
+      
+      drawLine(x-rad/2, y-rad, x+rad/2, y+rad); 
+      drawLine(x-rad, y-rad/2, x+rad, y+rad/2); 
+      drawLine(x-rad/2, y+rad, x+rad/2, y-rad); 
+      drawLine(x-rad, y+rad/2, x+rad, y-rad/2); 
+    }
+    
+    function draw() {
+      // TODO your code here -- several calls to your drawLine function 
+
+      // Background
+      // drawRect is written using drawLine function
+      var layer = 480/15;
+      drawRect(0, 0, 640, 5*layer, "#2C4A73");
+      drawRect(0, 5*layer, 640, 8*layer, "#29638F");
+      drawRect(0, 8*layer, 640, 9*layer, "#568099");
+      drawRect(0, 9*layer, 640, 10*layer, "#8DA398");
+      drawRect(0, 10*layer, 640, 11*layer, "#F9C06B");
+      drawRect(0, 11*layer, 640, 15*layer, "#D98545");
+
+      // Buildings
+      var randomHeight, randomWidth;
+      var x = 0;
+      while (x <= 640) {
+        randomWidth = Math.floor(Math.random() * (70 - 40) + 40);
+        randomHeight = Math.floor(Math.random() * (150 - 60) + 60);
+        drawRect(x, 480 - randomHeight, x+randomWidth, 480, "black");
+        x += randomWidth;
+      }
+
+      // Stars
+      var randomX, randomY;
+      colors = ["white", "Pink", "DodgerBlue", "HotPink", "LightBlue"];
+      for (var i = 0; i < colors.length; i++) {
+        for (var num = 0; num < 5; num ++) {
+          randomX = Math.floor(Math.random() * 640);
+          randomY = Math.floor(Math.random() * 300);
+          drawStar(randomX, randomY, colors[i]);
+        }
+      }
+    }
+
+    function init() {
+      canvas = document.getElementById("theCanvas");
+      graphics = canvas.getContext("2d");
+      draw();  // draw something on the canvas
+    }
+  </script>
+
+
+</head>
+
+<body onload="init()">
+  <canvas id="theCanvas" width="640" height="480"></canvas>
+</body>
+
+</html>

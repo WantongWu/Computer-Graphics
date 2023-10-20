@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Flood Fill</title>
+
+
+  <script>
+    /*
+     * Name:  Wantong Wu
+     * Partner name (if pair programming): N/A
+     * Reflections on this assignment:
+     * 
+     */
+
+    var canvas;    // DOM object corresponding to the canvas
+    var graphics;  // 2D graphics context for drawing on the canvas
+
+    // note: change both for a different background color
+    var backgroundColor = "HotPink";
+    var backgroundRGB = [255, 105, 180, 255];
+
+    // return true if color1==color2, and false otherwise
+    // example input: color1 = [0,255,0,255], pure green
+    // you can test things like color1[0]==color2[0], etc.
+    function colorEqual(color1, color2) {
+      for (var i = 0; i < 4; i++) {
+        if (color1[i] != color2[i]) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // fill a shape, starting at the pixel (x,y)
+    // note: make sure to set "fillStyle" to the desired fill color 
+    // before calling this function
+    function floodFill(x, y, oldColor) {
+      // get the color of current pixel
+      var pixColor = graphics.getImageData(x, y, 1, 1).data;
+
+      if (!colorEqual(pixColor, oldColor)) {
+        return;
+      }
+
+      graphics.fillRect(x, y, 1, 1);
+
+      // Recursive calls
+      floodFill(x + 1, y, oldColor);
+      floodFill(x - 1, y, oldColor);
+      floodFill(x, y + 1, oldColor);
+      floodFill(x, y - 1, oldColor);
+    }
+
+    // Arbitrarily define format for vertices input
+    // xArr, yArr: coordinate for a set of vertices
+    function scanlineFill(xArr, yArr) {
+        var i, yMin, yMax;
+        yMin = Math.floor(Math.min(...yArr));
+        yMax = Math.ceil(Math.max(...yArr));
+
+        for (var y = yMin; y <= yMax; y++) {
+            var xC = [];
+            for (i = 0; i < xArr.length; i++) {
+                var curY, nextY, nextX;
+                curY = yArr[i];
+                if (i == xArr.length-1){
+                    nextX = xArr[0];
+                    nextY = yArr[0];
+                } else {
+                    nextX = xArr[i+1];
+                    nextY = yArr[i+1];
+                }
+
+                if ((curY < y && nextY >= y) || (curY >= y && nextY < y)) {
+                    //console.log(y);
+                    //console.log(curY,nextY);
+                    xC.push(
+                        ((xArr[i]-nextX)/(curY-nextY))*y + 
+                        (nextX*curY-xArr[i]*nextY)/(curY-nextY)
+                        );
+                }
+            }
+            //console.log(xC);
+            xC.sort();
+            for (i = 0; i < xC.length; i += 2) {
+                for (var x = xC[i]; x < xC[i+1]; x++) {
+                    graphics.fillRect(x, y, 1, 1);
+                }
+            }
+        }
+    }
+
+    // draws a regular polygon with n sides, centered at (cx,cy), with radius r and rotation
+    // Include Scanline fill.
+    function regularPolygon(n, cx, cy, r, rotation, lineColor, fillColor) {
+
+      graphics.strokeStyle = lineColor;
+
+      var theta = 2 * Math.PI / n;
+
+      // this begins our polygon
+      graphics.beginPath();
+
+      graphics.moveTo(cx + r * Math.cos(n * theta + rotation), cy + r * Math.sin(n * theta + rotation));
+
+      var xArr = [];
+      var yArr = [];
+
+      for (var i = 1; i < n + 1; i++) {
+        x = cx + r * Math.cos(i * theta + rotation);
+        y = cy + r * Math.sin(i * theta + rotation);
+        graphics.lineTo(x, y);
+        xArr.push(x);
+        yArr.push(y);
+      }
+
+      graphics.fillStyle = fillColor;
+      scanlineFill(xArr, yArr);
+
+      graphics.stroke();
+    }
+
+    function draw() {
+      // make sure to color the background first, since it doesn't have a default color
+      graphics.fillStyle = backgroundColor;
+      graphics.fillRect(0, 0, canvas.width, canvas.height);
+
+      var i, randomX, randomY;
+
+      // TODO: call your regular polygon function, then fill it from the center
+      for (i = 0; i < 50; i++) {
+        randomX = Math.floor(Math.random() * canvas.width);
+        randomY = Math.floor(Math.random() * canvas.height);
+        randomRotation = Math.floor(Math.random() * 360);
+        regularPolygon(3, randomX, randomY, 5, randomRotation, "Aqua", "LimeGreen");
+      }
+      
+      for (i = 20; i >= 3; i--) {
+        regularPolygon(i, canvas.width/2, canvas.height/2, i*5, i*10, "Yellow", "BlueViolet");
+      }
+      //graphics.fillStyle = "BlueViolet";
+      //floodFill(300, 200, backgroundRGB);
+
+    }
+
+    function init() {
+      canvas = document.getElementById("theCanvas");
+      graphics = canvas.getContext("2d");
+      draw();  // draw something on the canvas
+    }
+  </script>
+
+
+</head>
+
+<body onload="init()">
+  <canvas id="theCanvas" width="450" height="290"></canvas>
+</body>
+
+</html>
